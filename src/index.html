@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bootstrap 101 Template</title>
+  <link href="../bower_components/bootstrap-css/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body ng-app="app">
+
+  <div ng-controller="MyController as vm">
+
+    <!--<div class="item" ng-repeat="slide in vm.slides" ng-class="{ 'active': slide.active }">
+          <img holder="holder.js/900x500?random=yes&text=Slide {{ slide.id }}">
+        </div>-->
+
+    <!--<div class="carousel slide">
+      <ol class="carousel-indicators">
+        <li ng-repeat="slide in vm.slides" ng-class="{ 'active': vm.isActive(slide) }" ng-click="vm.setActive(slide)"></li>
+      </ol>
+
+      <div class="carousel-inner" role="listbox">
+
+        <div class="item" ng-repeat="slide in vm.slides" ng-class="{
+          'prev': vm.isPrev(slide), 
+          'active': vm.isActive(slide),
+          'next': vm.isNext(slide) 
+        }">
+
+          <img holder="holder.js/900x500?auto=yes&random=yes&text=Slide {{ slide.id }}" style="margin:auto;">
+          <div class="carousel-caption">
+            <h1>{{ slide.caption }}</h1>
+          </div>
+
+        </div>
+
+      </div>
+
+      <a class="left carousel-control" role="button" ng-click="vm.prev()">
+        <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+        <span class="sr-only">Previous</span>
+      </a>
+
+      <a class="right carousel-control" role="button" ng-click="vm.next()">
+        <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+        <span class="sr-only">Next</span>
+      </a>
+
+    </div>-->
+
+    <!-- -------------------------------------------- -->
+
+    <carousel>
+      <carousel-slide ng-repeat="slide in vm.slides">
+        <img holder="holder.js/900x500?auto=yes&random=yes&text=Slide {{ slide.id }}" style="margin:auto;">
+          <div class="carousel-caption">
+            <h1>{{ slide.caption }}</h1>
+          </div>
+      </carousel-slide>
+    </carousel>
+
+  </div>
+
+
+
+
+  <script src="../bower_components/holderjs/holder.min.js"></script>
+  <script src="../bower_components/angular/angular.js"></script>
+  <script src="../bower_components/angular-holderjs/src/holder.js"></script>
+  <script src="../bower_components/angular-lorem/angular-lorem.js"></script>
+
+  <script src="angular-carousel-bs/angular-carousel-bs.js"></script>
+  <script src="app/app.js"></script>
+</body>
+
+</html>
