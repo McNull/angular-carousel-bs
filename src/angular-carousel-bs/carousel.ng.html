@@ -1,7 +1,7 @@
 <div><div class="carousel carousel-bs slide {{$carousel._direction}}">
 
   <ol class="carousel-indicators">
-    <li ng-repeat="slide in $carousel.slides" ng-class="{ 'active': $carousel.isActive(slide) }" ng-click="$carousel.setActive(slide)"></li>
+    <li ng-repeat="slide in $carousel._slides" ng-class="{ 'active': $carousel.isActive(slide) }" ng-click="$carousel.setActive(slide)"></li>
   </ol>
 
   <div class="carousel-inner" role="listbox" ng-transclude="">
@@ -17,5 +17,5 @@
     <span class="sr-only">Next</span>
   </a>
 </div>
-<pre><code>{{ $carousel.inProgress | json }}</code></pre>
+
 </div>

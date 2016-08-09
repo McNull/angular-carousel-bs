@@ -28,63 +28,67 @@
 
       ////////////////////////////////////////////////
 
-      this.slides = [];
-      this.activeIndex = 0;
+      this._slides = [];
+      this._activeIndex = 0;
 
       this.addSlide = function (slide) {
-        self.slides.push(slide);
+        self._slides.push(slide);
       };
 
       this.removeSlide = function (slide) {
-        var idx = self.slides.indexOf(slide);
+        var idx = self._slides.indexOf(slide);
 
         if (idx !== -1) {
-          self.slides.splice(idx, 1);
+          self._slides.splice(idx, 1);
         }
       };
 
       this.isActive = function (slide) {
-        return self.slides[self.activeIndex] === slide;
+        return self._slides[self._activeIndex] === slide;
       };
 
-      this.setActiveIndex = function (idx) {
-        if (idx < 0) {
-          idx = Math.abs(idx) % self.slides.length;
-          idx = self.slides.length - idx;
-        } else if (idx >= self.slides.length) {
-          idx = idx % self.slides.length;
-        }
+      this.activeIndex = function (idx) {
 
-        if (idx !== self.activeIndex) {
-
-          if((idx < self.activeIndex || (self.activeIndex === 0 && idx === self.slides.length - 1)) && !(self.activeIndex === self.slides.length - 1 && idx === 0)) {
-            self._direction = 'left';
-          } else {
-            self._direction = 'right';
+        if (angular.isNumber(idx)) {
+          if (idx < 0) {
+            idx = Math.abs(idx) % self._slides.length;
+            idx = self._slides.length - idx;
+          } else if (idx > 0 && idx >= self._slides.length) {
+            idx = idx % self._slides.length;
           }
 
-          self.activeIndex = idx;
+          if (idx !== self._activeIndex) {
+
+            if ((idx < self._activeIndex || (self._activeIndex === 0 && idx === self._slides.length - 1)) && !(self._activeIndex === self._slides.length - 1 && idx === 0)) {
+              self._direction = 'left';
+            } else {
+              self._direction = 'right';
+            }
+
+            self._activeIndex = idx;
+          }
         }
+
+        return self._activeIndex;
       };
 
       this.setActive = function (slide) {
-        self.setActiveIndex(self.getIndex(slide));
+        self.activeIndex(self.getIndex(slide));
       };
 
       this.getIndex = function (slide) {
-        return self.slides.indexOf(slide);
+        return self._slides.indexOf(slide);
       };
 
       this.next = function () {
-        var idx = self.activeIndex + 1;
-        self.setActiveIndex(idx);
+        var idx = self._activeIndex + 1;
+        self.activeIndex(idx);
       };
 
       this.prev = function () {
-        var idx = self.activeIndex - 1;
-        self.setActiveIndex(idx);
+        var idx = self._activeIndex - 1;
+        self.activeIndex(idx);
       };
-
     }
 
     return {
@@ -109,7 +113,9 @@
 
   mod.directive('carousel', function (carouselManager) {
     return {
-      scope: true,
+      scope: {
+        activeIndex: '=?'
+      },
       restrict: 'AE',
       templateUrl: '/src/angular-carousel-bs/carousel.ng.html',
       controller: function () { },
@@ -121,6 +127,19 @@
           element.data('$carousel', carousel);
 
           scope.$carousel = carousel;
+
+          scope.$watch('activeIndex', function (val, oldVal) {
+            if (val !== oldVal) {
+              carousel.activeIndex(val);
+            }
+          });
+
+          scope.$watch(function() {
+            return carousel.activeIndex();
+          }, function(val) {
+            scope.activeIndex = val;
+          });
+
         }
       }
     };
@@ -146,22 +165,6 @@
 
         scope.$carousel = carousel;
         scope.$slide = slide;
-
-        // scope.cssClass = function () {
-        //   var ret = '';
-        //   var idx = carousel.getIndex(slide);
-
-        //   if (idx === carousel.activeIndex) {
-        //     ret += 'active ';
-        //   }
-
-        //   if (carousel.isNext(idx)) {
-        //     ret += 'next ';
-        //   } else if (carousel.isPrev(idx)) {
-        //     ret += 'prev ';
-        //   }
-        //   return ret;
-        // };
       }
     };
   });

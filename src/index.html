@@ -55,7 +55,7 @@
     <!-- -------------------------------------------- -->
     <hr>
     
-    <carousel>
+    <carousel active-index="vm.activeIndex">
       <carousel-slide ng-repeat="slide in vm.slides">
         <img holder="holder.js/900x500?auto=yes&random=yes&text=Slide {{ slide.id }}" style="margin:auto;">
           <div class="carousel-caption">
@@ -64,6 +64,7 @@
       </carousel-slide>
     </carousel>
 
+    <pre><code>{{ vm.activeIndex | json }}</code></pre>
   </div>
 
 
