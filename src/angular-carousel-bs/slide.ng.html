@@ -1,6 +1,2 @@
-<div class="item" ng-class="{
-          'prev': $carousel.isPrev($slide), 
-          'active': $carousel.isActive($slide),
-          'next': $carousel.isNext($slide) 
-        }" ng-transclude="">
+<div class="item" ng-transclude="" ng-class="{ active: $carousel.isActive($slide) }">
 </div>

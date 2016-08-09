@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bootstrap 101 Template</title>
   <link href="../bower_components/bootstrap-css/css/bootstrap.min.css" rel="stylesheet">
+  <link href="angular-carousel-bs/angular-carousel-bs.css" rel="stylesheet">
 </head>
 
 <body ng-app="app">
@@ -52,7 +53,8 @@
     </div>-->
 
     <!-- -------------------------------------------- -->
-
+    <hr>
+    
     <carousel>
       <carousel-slide ng-repeat="slide in vm.slides">
         <img holder="holder.js/900x500?auto=yes&random=yes&text=Slide {{ slide.id }}" style="margin:auto;">
@@ -69,6 +71,7 @@
 
   <script src="../bower_components/holderjs/holder.min.js"></script>
   <script src="../bower_components/angular/angular.js"></script>
+  <script src="../bower_components/angular-animate/angular-animate.js"></script>
   <script src="../bower_components/angular-holderjs/src/holder.js"></script>
   <script src="../bower_components/angular-lorem/angular-lorem.js"></script>
 

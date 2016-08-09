@@ -2,7 +2,7 @@
 
   'use strict';
 
-  var mod = angular.module('angular-carousel-bs', []);
+  var mod = angular.module('angular-carousel-bs', ['ngAnimate']);
 
   mod.factory('carouselManager', function ($interval, $timeout) {
 
@@ -43,31 +43,11 @@
         }
       };
 
-      this.isPrev = function (slide) {
-        var slideIdx = self.getIndex(slide);
-        return self.activeIndex - 1 === slideIdx || self.activeIndex === 0 && slideIdx === self.slides.length - 1;
-      };
-
       this.isActive = function (slide) {
         return self.slides[self.activeIndex] === slide;
       };
 
-      this.isNext = function (slide) {
-        var slideIdx = self.getIndex(slide);
-        return self.activeIndex + 1 === slideIdx || slideIdx === 0 && self.activeIndex == self.slides.length - 1;
-      };
-
       this.setActiveIndex = function (idx) {
-
-        if (self.bigJump) {
-          return;
-        }
-
-        // if (self.bigJumpPromise) {
-        //   $interval.cancel(self.bigJumpPromise);
-        //   self.bigJumpPromise = null;
-        // }
-
         if (idx < 0) {
           idx = Math.abs(idx) % self.slides.length;
           idx = self.slides.length - idx;
@@ -76,34 +56,15 @@
         }
 
         if (idx !== self.activeIndex) {
-          var delta = Math.abs(idx - self.activeIndex);
 
-          if (delta > 1 &&
-            !(self.activeIndex === 0 && idx === self.slides.length - 1) &&
-            !(self.activeIndex === self.slides.length - 1 && idx === 0)) {
-            var direction = idx < self.activeIndex ? -1 : 1;
-
-            self.bigJump = {
-              direction: direction,
-              start: self.activeIndex,
-              end: idx
-            };
-            
-            self.activeIndex += direction;
-
-            self.bigJump.promise = $interval(function() {
-              self.activeIndex += direction;
-            }, 600, delta - 1);
-            
-            self.bigJump.promise.then(function() {
-              delete self.bigJump;
-            });
-            
+          if((idx < self.activeIndex || (self.activeIndex === 0 && idx === self.slides.length - 1)) && !(self.activeIndex === self.slides.length - 1 && idx === 0)) {
+            self._direction = 'left';
           } else {
-            self.activeIndex = idx;
+            self._direction = 'right';
           }
-        }
 
+          self.activeIndex = idx;
+        }
       };
 
       this.setActive = function (slide) {
@@ -185,6 +146,22 @@
 
         scope.$carousel = carousel;
         scope.$slide = slide;
+
+        // scope.cssClass = function () {
+        //   var ret = '';
+        //   var idx = carousel.getIndex(slide);
+
+        //   if (idx === carousel.activeIndex) {
+        //     ret += 'active ';
+        //   }
+
+        //   if (carousel.isNext(idx)) {
+        //     ret += 'next ';
+        //   } else if (carousel.isPrev(idx)) {
+        //     ret += 'prev ';
+        //   }
+        //   return ret;
+        // };
       }
     };
   });

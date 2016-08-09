@@ -1,4 +1,4 @@
-<div class="carousel slide">
+<div><div class="carousel carousel-bs slide {{$carousel._direction}}">
 
   <ol class="carousel-indicators">
     <li ng-repeat="slide in $carousel.slides" ng-class="{ 'active': $carousel.isActive(slide) }" ng-click="$carousel.setActive(slide)"></li>
@@ -16,5 +16,6 @@
     <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
     <span class="sr-only">Next</span>
   </a>
-
+</div>
+<pre><code>{{ $carousel.inProgress | json }}</code></pre>
 </div>
