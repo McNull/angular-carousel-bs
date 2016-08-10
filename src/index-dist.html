@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bootstrap 101 Template</title>
+  <link href="../bower_components/bootstrap-css/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../dist/angular-carousel-bs.min.css" rel="stylesheet">
+</head>
+
+<body ng-app="app">
+
+  <div ng-controller="MyController as vm">
+
+    <hr>
+
+    <div carousel="vm.carousel" interval="1500" active-index="vm.activeIndex">
+      <carousel-slide ng-if="!vm.slides.length">
+        <img holder="holder.js/900x500?auto=yes&random=yes&text=No slides added" style="margin:auto;">
+      </carousel-slide>
+      <div carousel-slide="slide" ng-repeat="slide in vm.slides">
+        <img holder="holder.js/900x500?auto=yes&random=yes&text=Slide {{ slide.id }}" style="margin:auto;">
+        <div class="carousel-caption">
+          <h1>{{ slide.caption }}</h1>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="container">
+
+      <div class="btn-toolbar">
+        <button class="btn btn-default" ng-click="vm.addSlide()">Add</button>
+        <button ng-disabled="!vm.slides.length" class="btn btn-default" ng-click="vm.removeSlide()">Remove</button>
+      </div>
+      
+      <br>
+
+      <pre><code>{{ vm.activeIndex | json }}</code></pre>
+      <pre><code>{{ vm.carousel | json }}</code></pre>
+    </div>
+
+  </div>
+
+  <script src="../bower_components/holderjs/holder.min.js"></script>
+  <script src="../bower_components/angular/angular.js"></script>
+  <script src="../bower_components/angular-animate/angular-animate.js"></script>
+  <script src="../bower_components/angular-holderjs/src/holder.js"></script>
+  <script src="../bower_components/angular-lorem/angular-lorem.js"></script>
+
+  <script src="../dist/angular-carousel-bs.min.js"></script>
+  <script src="app/app.js"></script>
+</body>
+
+</html>

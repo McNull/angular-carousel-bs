@@ -4,7 +4,10 @@
     "McNull <noreplies@hotmail.com>"
   ],
   "description": "Twitter bootstrap carousel using angular",
-  "main": "",
+  "main": [
+    "dist/angular-carousel-bs.js",
+    "dist/angular-carousel-bs.css"
+  ],
   "keywords": [
     "carousel",
     "bootstrap",
