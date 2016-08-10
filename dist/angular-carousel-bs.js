@@ -198,7 +198,7 @@
         interval: '=?'
       },
       restrict: 'AE',
-      templateUrl: '/src/angular-carousel-bs/carousel.ng.html',
+      templateUrl: './src/angular-carousel-bs/carousel.ng.html',
       controller: function () { },
       transclude: true,
       link: {
@@ -241,7 +241,7 @@
       },
       replace: true,
       restrict: 'AE',
-      templateUrl: '/src/angular-carousel-bs/slide.ng.html',
+      templateUrl: './src/angular-carousel-bs/slide.ng.html',
       transclude: true,
       require: '^carousel',
       link: function (scope, element, attributes) {
