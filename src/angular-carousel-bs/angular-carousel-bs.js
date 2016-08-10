@@ -4,7 +4,7 @@
 
   var mod = angular.module('angular-carousel-bs', ['ngAnimate']);
 
-  mod.factory('carouselManager', function ($interval, $timeout) {
+  mod.factory('carouselService', function ($interval) {
 
     var carousels = {};
 
@@ -30,31 +30,58 @@
 
       this._slides = [];
       this._activeIndex = 0;
-
-      this.addSlide = function (slide) {
-        self._slides.push(slide);
+      this._interval = {
+        delay: 0
       };
 
-      this.removeSlide = function (slide) {
-        var idx = self._slides.indexOf(slide);
+      ////////////////////////////////////////////////
+
+      this.addSlide = function (slide) {
+        slide = slide || {};
+        self._slides.push(slide);
+        return slide;
+      };
+
+      ////////////////////////////////////////////////
+
+      this.removeSlide = function (slideOrIdx) {
+        var idx;
+
+        if (angular.isNumber(slideOrIdx)) {
+          idx = slideOrIdx >= 0 && slideOrIdx < self._slides.length ? slideOrIdx : -1;
+        } else {
+          idx = self._slides.indexOf(slideOrIdx);
+        }
 
         if (idx !== -1) {
           self._slides.splice(idx, 1);
+          if (self._activeIndex >= self._slides.length) {
+            self.activeIndex(self._slides.length - 1);
+          }
         }
       };
+
+      ////////////////////////////////////////////////
 
       this.isActive = function (slide) {
         return self._slides[self._activeIndex] === slide;
       };
 
+      ////////////////////////////////////////////////
+
       this.activeIndex = function (idx) {
 
         if (angular.isNumber(idx)) {
-          if (idx < 0) {
-            idx = Math.abs(idx) % self._slides.length;
-            idx = self._slides.length - idx;
-          } else if (idx > 0 && idx >= self._slides.length) {
-            idx = idx % self._slides.length;
+
+          if (self._slides.length > 0) {
+            if (idx < 0) {
+              idx = Math.abs(idx) % self._slides.length;
+              idx = self._slides.length - idx;
+            } else if (idx > 0 && idx >= self._slides.length) {
+              idx = idx % self._slides.length;
+            }
+          } else {
+            idx = 0;
           }
 
           if (idx !== self._activeIndex) {
@@ -72,23 +99,73 @@
         return self._activeIndex;
       };
 
+      ////////////////////////////////////////////////
+
       this.setActive = function (slide) {
         self.activeIndex(self.getIndex(slide));
       };
 
+      ////////////////////////////////////////////////
+
       this.getIndex = function (slide) {
         return self._slides.indexOf(slide);
       };
+
+      ////////////////////////////////////////////////
 
       this.next = function () {
         var idx = self._activeIndex + 1;
         self.activeIndex(idx);
       };
 
+      ////////////////////////////////////////////////
+
       this.prev = function () {
         var idx = self._activeIndex - 1;
         self.activeIndex(idx);
       };
+
+      ////////////////////////////////////////////////
+
+      this.interval = function (delay) {
+        if (angular.isNumber(delay)) {
+          self._interval.delay = delay;
+          if (self._interval.promise) {
+            $interval.cancel(self._interval.promise);
+            delete self._interval.promise;
+          }
+          if (delay > 0) {
+            self._interval.promise = $interval(function () {
+              self.next();
+            }, delay);
+          }
+        }
+
+        return self._interval.delay;
+      };
+
+      ////////////////////////////////////////////////
+
+      this.pause = function () {
+        
+        self.paused = true;
+
+        if (self._interval.promise) {
+          $interval.cancel(self._interval.promise);
+          delete self._interval.promise;
+        }
+      };
+
+      ////////////////////////////////////////////////
+
+      this.resume = function () {
+
+        self.paused = false;
+
+        self.interval(self._interval.delay);
+      };
+
+      ////////////////////////////////////////////////
     }
 
     return {
@@ -111,10 +188,14 @@
 
   });
 
-  mod.directive('carousel', function (carouselManager) {
+  ////////////////////////////////////////////////
+
+  mod.directive('carousel', function (carouselService) {
     return {
       scope: {
-        activeIndex: '=?'
+        activeIndex: '=?',
+        carousel: '=?',
+        interval: '=?'
       },
       restrict: 'AE',
       templateUrl: '/src/angular-carousel-bs/carousel.ng.html',
@@ -123,10 +204,10 @@
       link: {
         pre: function (scope, element, attributes) {
           var id = attributes.id;
-          var carousel = carouselManager.get(id, scope);
-          element.data('$carousel', carousel);
 
-          scope.$carousel = carousel;
+          var carousel = carouselService.get(id, scope);
+          element.data('$carousel', carousel);
+          scope.carousel = carousel;
 
           scope.$watch('activeIndex', function (val, oldVal) {
             if (val !== oldVal) {
@@ -134,39 +215,51 @@
             }
           });
 
-          scope.$watch(function() {
+          scope.$watch(function () {
             return carousel.activeIndex();
-          }, function(val) {
+          }, function (val) {
             scope.activeIndex = val;
           });
 
+          scope.$watch('interval', function (val, oldVal) {
+
+            val = val && angular.isNumber(val) ? val : 0;
+            carousel.interval(parseInt(val));
+
+          });
         }
       }
     };
   });
 
+  ////////////////////////////////////////////////
+
   mod.directive('carouselSlide', function () {
     return {
-      scope: true,
+      scope: {
+        slide: '=?carouselSlide'
+      },
       replace: true,
       restrict: 'AE',
       templateUrl: '/src/angular-carousel-bs/slide.ng.html',
       transclude: true,
       require: '^carousel',
       link: function (scope, element, attributes) {
+
         var carousel = element.inheritedData('$carousel');
 
-        var slide = {};
-        carousel.addSlide(slide);
+        scope.slide = carousel.addSlide(scope.slide || {});
 
         scope.$on('$destroy', function () {
-          carousel.removeSlide(slide);
+          carousel.removeSlide(scope.slide);
         });
 
-        scope.$carousel = carousel;
-        scope.$slide = slide;
+        scope.carousel = carousel;
+
       }
     };
   });
+
+  ////////////////////////////////////////////////
 
 })(angular);

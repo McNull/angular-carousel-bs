@@ -54,21 +54,35 @@
 
     <!-- -------------------------------------------- -->
     <hr>
-    
-    <carousel active-index="vm.activeIndex">
-      <carousel-slide ng-repeat="slide in vm.slides">
-        <img holder="holder.js/900x500?auto=yes&random=yes&text=Slide {{ slide.id }}" style="margin:auto;">
-          <div class="carousel-caption">
-            <h1>{{ slide.caption }}</h1>
-          </div>
+
+    <div carousel="vm.carousel" interval="1500" active-index="vm.activeIndex">
+      <carousel-slide ng-if="!vm.slides.length">
+        <img holder="holder.js/900x500?auto=yes&random=yes&text=No slides added" style="margin:auto;">
       </carousel-slide>
-    </carousel>
+      <div carousel-slide="slide" ng-repeat="slide in vm.slides">
+        <img holder="holder.js/900x500?auto=yes&random=yes&text=Slide {{ slide.id }}" style="margin:auto;">
+        <div class="carousel-caption">
+          <h1>{{ slide.caption }}</h1>
+        </div>
+      </div>
+    </div>
 
-    <pre><code>{{ vm.activeIndex | json }}</code></pre>
+    <hr>
+
+    <div class="container">
+
+      <div class="btn-toolbar">
+        <button class="btn btn-default" ng-click="vm.addSlide()">Add</button>
+        <button ng-disabled="!vm.slides.length" class="btn btn-default" ng-click="vm.removeSlide()">Remove</button>
+      </div>
+      
+      <br>
+
+      <pre><code>{{ vm.activeIndex | json }}</code></pre>
+      <pre><code>{{ vm.carousel | json }}</code></pre>
+    </div>
+
   </div>
-
-
-
 
   <script src="../bower_components/holderjs/holder.min.js"></script>
   <script src="../bower_components/angular/angular.js"></script>
