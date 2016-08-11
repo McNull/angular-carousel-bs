@@ -69,7 +69,7 @@
 
       ////////////////////////////////////////////////
 
-      this.activeIndex = function (idx) {
+      this.activeIndex = function (idx, direction) {
 
         if (angular.isNumber(idx)) {
 
@@ -85,12 +85,18 @@
           }
 
           if (idx !== self._activeIndex) {
+            // debugger;
 
-            if ((idx < self._activeIndex || (self._activeIndex === 0 && idx === self._slides.length - 1)) && !(self._activeIndex === self._slides.length - 1 && idx === 0)) {
-              self._direction = 'left';
-            } else {
-              self._direction = 'right';
-            }
+            direction = direction || idx - self._activeIndex;
+            self._direction = direction < 0 ? 'left' : 'right';
+
+            console.log(direction, self._direction);
+            // if ((idx < self._activeIndex || (self._activeIndex === 0 && idx === self._slides.length - 1)) && 
+            //    !(self._activeIndex === self._slides.length - 1 && idx === 0)) {
+            //   self._direction = 'left';
+            // } else {
+            //   self._direction = 'right';
+            // }
 
             self._activeIndex = idx;
           }
@@ -104,26 +110,26 @@
       this.setActive = function (slide, isRetry) {
         var idx = self.getIndex(slide);
 
-        if(idx === -1) {
+        if (idx === -1) {
 
           // Slide not found in collection.
           // Throw an error if we're already in a retry.
 
-          if(isRetry) {
+          if (isRetry) {
             throw new Error('Cannot slide active; not part of the carousel.');
           }
 
           // Maybe the slide directive has not been digested yet. 
           // Queue a retry on the $digest cycle.
-          
-          $timeout(function() {
+
+          $timeout(function () {
             self.setActive(slide, true);
           });
-          
+
         } else {
           self.activeIndex(idx);
         }
-        
+
       };
 
       ////////////////////////////////////////////////
@@ -136,14 +142,14 @@
 
       this.next = function () {
         var idx = self._activeIndex + 1;
-        self.activeIndex(idx);
+        self.activeIndex(idx, 1);
       };
 
       ////////////////////////////////////////////////
 
       this.prev = function () {
         var idx = self._activeIndex - 1;
-        self.activeIndex(idx);
+        self.activeIndex(idx, -1);
       };
 
       ////////////////////////////////////////////////
