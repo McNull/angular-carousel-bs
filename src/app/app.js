@@ -13,7 +13,7 @@
 
     this.slides = [];
 
-    this.addSlide = function(setActive) {
+    this.addSlide = function (setActive) {
 
       self.addSlide.id = (self.addSlide.id || 0) + 1;
 
@@ -26,28 +26,23 @@
 
       self.slides.push(slide);
 
-      if(setActive !== false) {
+      if (setActive !== false) {
         self.carousel.setActive(slide)
       }
     };
 
-    this.removeSlide = function() {
-      var idx = self.activeIndex;
-
-      // self.carousel.removeSlide(idx).then(function() {
-        self.slides.splice(idx, 1);
-      // });
-
+    this.removeSlide = function () {
+      var idx = self.carousel.activeIndex();
+      self.slides.splice(idx, 1);
     };
-  
-    var x = 2;
 
-    while(x--) {
+    var x = 10;
+
+    while (x--) {
       self.addSlide(false);
     }
 
-     this.activeIndex = 0;
-    //self.carousel.setActive(self.slides[2]);
+    self.carousel.setActive(self.slides[1]);
   });
 
 })(angular);

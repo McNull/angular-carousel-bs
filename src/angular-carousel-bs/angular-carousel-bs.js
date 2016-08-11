@@ -64,8 +64,8 @@
           }
 
           // $timeout(function () {
-            self._slides.splice(idx, 1);
-            defer.resolve();
+          self._slides.splice(idx, 1);
+          defer.resolve();
           // }, 600);
 
         } else {
@@ -97,13 +97,9 @@
 
         self._setActiveIndexDelayed._progress = $timeout(function () {
 
+          direction = direction || idx - self._activeIndexDelayed;
           self._direction = direction < 0 ? 'left' : 'right';
-
-          if (idx < self._slides.length) {
-            direction = direction || idx - self._activeIndexDelayed;
-
-            self._activeIndexDelayed = idx;
-          }
+          self._activeIndexDelayed = idx;
 
           delete self._setActiveIndexDelayed._progress;
         }, 300);
@@ -275,18 +271,10 @@
         },
         post: function (scope, element, attributes) {
 
-
           scope.activeIndex = scope.activeIndex || 0;
-
-          scope.$watch('activeIndex', function (val) {
-            scope.carousel._activeIndex = val;
-          });
+          scope.carousel._activeIndexDelayed = scope.activeIndex;
 
           var once = true;
-
-          scope.$watch('carousel._activeIndex', function (val) {
-            scope.activeIndex = val;
-          });
 
           scope.$watch('interval', function (val, oldVal) {
             val = val && angular.isNumber(val) ? val : 0;
