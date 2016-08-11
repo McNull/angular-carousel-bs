@@ -8,7 +8,7 @@
 
     this.slides = [];
 
-    this.addSlide = function() {
+    this.addSlide = function(setActive) {
 
       self.addSlide.id = (self.addSlide.id || 0) + 1;
 
@@ -21,13 +21,23 @@
 
       self.slides.push(slide);
 
-      self.carousel.setActive(slide)
+      if(setActive !== false) {
+        self.carousel.setActive(slide)
+      }
     };
 
     this.removeSlide = function() {
       self.slides.splice(self.activeIndex, 1);
     };
   
+    var x = 10;
+
+    while(x--) {
+      self.addSlide(false);
+    }
+
+    this.activeIndex = 2;
+
   });
 
 })(angular);

@@ -38,7 +38,7 @@ function prepareTemplates() {
   return gulp.src(config.src + '/*.ng.html')
     .pipe(htmlmin({ collapseWhitespace: true }))
     .pipe(templateCache({
-      root: config.src,
+      root: './angular-carousel',
       module: 'angular-carousel-bs'
     }));
 }

@@ -147,7 +147,7 @@
       ////////////////////////////////////////////////
 
       this.pause = function () {
-        
+
         self.paused = true;
 
         if (self._interval.promise) {
@@ -190,7 +190,7 @@
 
   ////////////////////////////////////////////////
 
-  mod.directive('carousel', function (carouselService) {
+  mod.directive('carousel', function (carouselService, $timeout) {
     return {
       scope: {
         activeIndex: '=?',
@@ -198,35 +198,38 @@
         interval: '=?'
       },
       restrict: 'AE',
-      templateUrl: './src/angular-carousel-bs/carousel.ng.html',
+      templateUrl: './angular-carousel-bs/carousel.ng.html',
       controller: function () { },
       transclude: true,
       link: {
         pre: function (scope, element, attributes) {
-          var id = attributes.id;
 
+          var id = attributes.id;
           var carousel = carouselService.get(id, scope);
           element.data('$carousel', carousel);
           scope.carousel = carousel;
 
-          scope.$watch('activeIndex', function (val, oldVal) {
-            if (val !== oldVal) {
-              carousel.activeIndex(val);
-            }
+        },
+        post: function (scope, element, attributes) {
+
+
+          scope.activeIndex = scope.activeIndex || 0;
+
+          scope.$watch('activeIndex', function (val) {
+            scope.carousel._activeIndex = val;
           });
 
-          scope.$watch(function () {
-            return carousel.activeIndex();
-          }, function (val) {
+          var once = true;
+
+          scope.$watch('carousel._activeIndex', function (val) {
             scope.activeIndex = val;
           });
 
           scope.$watch('interval', function (val, oldVal) {
-
             val = val && angular.isNumber(val) ? val : 0;
-            carousel.interval(parseInt(val));
-
+            scope.carousel.interval(parseInt(val));
           });
+
         }
       }
     };
@@ -241,21 +244,22 @@
       },
       replace: true,
       restrict: 'AE',
-      templateUrl: './src/angular-carousel-bs/slide.ng.html',
+      templateUrl: './angular-carousel-bs/slide.ng.html',
       transclude: true,
       require: '^carousel',
-      link: function (scope, element, attributes) {
+      link: {
+        pre: function (scope, element, attributes) {
 
-        var carousel = element.inheritedData('$carousel');
+          var carousel = element.inheritedData('$carousel');
 
-        scope.slide = carousel.addSlide(scope.slide || {});
+          scope.slide = carousel.addSlide(scope.slide || {});
 
-        scope.$on('$destroy', function () {
-          carousel.removeSlide(scope.slide);
-        });
+          scope.$on('$destroy', function () {
+            carousel.removeSlide(scope.slide);
+          });
 
-        scope.carousel = carousel;
-
+          scope.carousel = carousel;
+        }
       }
     };
   });
