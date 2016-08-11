@@ -61,6 +61,12 @@
         if (idx !== -1) {
           self._slides.splice(idx, 1);
           self.activeIndex = self.wrapIndex(self.activeIndex);
+
+          if(idx === self.activeIndex) {
+            self._direction = 'right';
+          } else {
+            self._forceDirection = -1;
+          }
         }
         
       };
@@ -119,7 +125,7 @@
       this._listeners.push($rootScope.$watch(function() {
         return self.activeIndex;
       }, function(val, oldVal) {
-        console.log('activeIndex changed', val, oldVal);
+        // console.log('activeIndex changed', val, oldVal);
         self._setActiveIndexDelayed(val, self._forceDirection);
         delete self._forceDirection;
       }));
