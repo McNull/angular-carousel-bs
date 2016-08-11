@@ -4,7 +4,7 @@
 
   var mod = angular.module('angular-carousel-bs', ['ngAnimate']);
 
-  mod.factory('carouselService', ["$interval", "$timeout", "$q", function ($interval, $timeout, $q) {
+  mod.factory('carouselService', ["$interval", "$timeout", "$q", "$rootScope", function ($interval, $timeout, $q, $rootScope) {
 
     var carousels = {};
 
@@ -15,6 +15,7 @@
 
       self._id = id;
       self._refCount = 0;
+      self._listeners = [];
 
       self.addRef = function () {
         self._refCount += 1;
@@ -22,6 +23,10 @@
 
       self.release = function () {
         if (--self._refCount <= 0) {
+          var x = self._listeners.length;
+          while(--x >= 0) {
+            self._listeners[x]();
+          }
           delete carousels[self._id];
         }
       };
@@ -29,7 +34,7 @@
       ////////////////////////////////////////////////
 
       this._slides = [];
-      this._activeIndex = this._activeIndexDelayed = 0;
+      this.activeIndex = this._activeIndexDelayed = 0;
       this._interval = {
         delay: 0
       };
@@ -45,7 +50,7 @@
       ////////////////////////////////////////////////
 
       this.removeSlide = function (slideOrIdx) {
-        var idx, defer = $q.defer();
+        var idx;
 
         if (angular.isNumber(slideOrIdx)) {
           idx = slideOrIdx >= 0 && slideOrIdx < self._slides.length ? slideOrIdx : -1;
@@ -54,31 +59,22 @@
         }
 
         if (idx !== -1) {
-
-          // if (self._activeIndex === idx) {
-          //   self.prev();
-          // }
-
-          if (self._activeIndex >= self._slides.length - 1) {
-            self.activeIndex(self._slides.length - 2);
-          }
-
-          // $timeout(function () {
           self._slides.splice(idx, 1);
-          defer.resolve();
-          // }, 600);
+          self.activeIndex = self.wrapIndex(self.activeIndex);
 
-        } else {
-          defer.resolve();
+          if(idx === self.activeIndex) {
+            self._direction = 'right';
+          } else {
+            self._forceDirection = -1;
+          }
         }
-
-        return defer.promise;
+        
       };
 
       ////////////////////////////////////////////////
 
       this.isActive = function (slide) {
-        return self._slides[self._activeIndex] === slide;
+        return self._slides[self.activeIndex] === slide;
       };
 
       ////////////////////////////////////////////////
@@ -108,27 +104,31 @@
 
       ////////////////////////////////////////////////
 
-      this.activeIndex = function (idx, direction) {
+      this.wrapIndex = function (idx) {
 
-        if (angular.isNumber(idx)) {
-
-          if (self._slides.length > 0) {
-            if (idx < 0) {
-              idx = Math.abs(idx) % self._slides.length;
-              idx = self._slides.length - idx;
-            } else if (idx > 0 && idx >= self._slides.length) {
-              idx = idx % self._slides.length;
-            }
-          } else {
-            idx = 0;
+        if (self._slides.length > 0) {
+          if (idx < 0) {
+            idx = Math.abs(idx) % self._slides.length;
+            idx = self._slides.length - idx;
+          } else if (idx > 0 && idx >= self._slides.length) {
+            idx = idx % self._slides.length;
           }
-
-          self._activeIndex = idx;
-          self._setActiveIndexDelayed(idx, direction);
+        } else {
+          idx = 0;
         }
 
-        return self._activeIndex;
+        return idx;
       };
+
+      ////////////////////////////////////////////////
+
+      this._listeners.push($rootScope.$watch(function() {
+        return self.activeIndex;
+      }, function(val, oldVal) {
+        // console.log('activeIndex changed', val, oldVal);
+        self._setActiveIndexDelayed(val, self._forceDirection);
+        delete self._forceDirection;
+      }));
 
       ////////////////////////////////////////////////
 
@@ -159,7 +159,7 @@
           }, 250);
 
         } else {
-          self.activeIndex(idx);
+          self.activeIndex = idx;
         }
 
       };
@@ -173,15 +173,19 @@
       ////////////////////////////////////////////////
 
       this.next = function () {
-        var idx = self._activeIndex + 1;
-        self.activeIndex(idx, 1);
+        var idx = self.activeIndex + 1;
+        idx = self.wrapIndex(idx);
+        self.activeIndex = idx;
+        self._forceDirection = 1;
       };
 
       ////////////////////////////////////////////////
 
       this.prev = function () {
-        var idx = self._activeIndex - 1;
-        self.activeIndex(idx, -1);
+        var idx = self.activeIndex - 1;
+        idx = self.wrapIndex(idx);
+        self.activeIndex = idx;
+        self._forceDirection = -1;
       };
 
       ////////////////////////////////////////////////
@@ -238,7 +242,7 @@
         if (scope) {
 
           carousels[id].addRef();
-          
+
           scope.$on('$destroy', function () {
             carousels[id].release();
           });
@@ -277,9 +281,15 @@
           scope.activeIndex = scope.activeIndex || 0;
           scope.carousel._activeIndexDelayed = scope.activeIndex;
 
-          var once = true;
+          scope.$watch('activeIndex', function(val) {
+            scope.carousel.activeIndex = val;
+          });
 
-          scope.$watch('interval', function (val, oldVal) {
+          scope.$watch('carousel.activeIndex', function(val) {
+            scope.activeIndex = val;
+          });
+
+          scope.$watch('interval', function (val) {
             val = val && angular.isNumber(val) ? val : 0;
             scope.carousel.interval(parseInt(val));
           });
