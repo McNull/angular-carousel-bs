@@ -108,21 +108,27 @@
 
       ////////////////////////////////////////////////
 
+      this.wrapIndex = function (idx) {
+
+        if (self._slides.length > 0) {
+          if (idx < 0) {
+            idx = Math.abs(idx) % self._slides.length;
+            idx = self._slides.length - idx;
+          } else if (idx > 0 && idx >= self._slides.length) {
+            idx = idx % self._slides.length;
+          }
+        } else {
+          idx = 0;
+        }
+
+        return idx;
+      };
+
+      ////////////////////////////////////////////////
+
       this.activeIndex = function (idx, direction) {
 
         if (angular.isNumber(idx)) {
-
-          if (self._slides.length > 0) {
-            if (idx < 0) {
-              idx = Math.abs(idx) % self._slides.length;
-              idx = self._slides.length - idx;
-            } else if (idx > 0 && idx >= self._slides.length) {
-              idx = idx % self._slides.length;
-            }
-          } else {
-            idx = 0;
-          }
-
           self._activeIndex = idx;
           self._setActiveIndexDelayed(idx, direction);
         }
@@ -174,6 +180,7 @@
 
       this.next = function () {
         var idx = self._activeIndex + 1;
+        idx = self.wrapIndex(idx);
         self.activeIndex(idx, 1);
       };
 
@@ -181,6 +188,7 @@
 
       this.prev = function () {
         var idx = self._activeIndex - 1;
+        idx = self.wrapIndex(idx);
         self.activeIndex(idx, -1);
       };
 
@@ -238,7 +246,7 @@
         if (scope) {
 
           carousels[id].addRef();
-          
+
           scope.$on('$destroy', function () {
             carousels[id].release();
           });
