@@ -4,7 +4,7 @@
 
   var mod = angular.module('angular-carousel-bs', ['ngAnimate']);
 
-  mod.factory('carouselService', function ($interval, $timeout, $q) {
+  mod.factory('carouselService', function ($interval, $timeout, $q, $rootScope) {
 
     var carousels = {};
 
@@ -15,6 +15,7 @@
 
       self._id = id;
       self._refCount = 0;
+      self._listeners = [];
 
       self.addRef = function () {
         self._refCount += 1;
@@ -22,6 +23,10 @@
 
       self.release = function () {
         if (--self._refCount <= 0) {
+          var x = self._listeners.length;
+          while(--x >= 0) {
+            self._listeners[x]();
+          }
           delete carousels[self._id];
         }
       };
