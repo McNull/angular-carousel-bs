@@ -84,22 +84,11 @@
             idx = 0;
           }
 
-          if (idx !== self._activeIndex) {
-            // debugger;
+          direction = direction || idx - self._activeIndex;
 
-            direction = direction || idx - self._activeIndex;
-            self._direction = direction < 0 ? 'left' : 'right';
+          self._direction = direction < 0 ? 'left' : 'right';
+          self._activeIndex = idx;
 
-            console.log(direction, self._direction);
-            // if ((idx < self._activeIndex || (self._activeIndex === 0 && idx === self._slides.length - 1)) && 
-            //    !(self._activeIndex === self._slides.length - 1 && idx === 0)) {
-            //   self._direction = 'left';
-            // } else {
-            //   self._direction = 'right';
-            // }
-
-            self._activeIndex = idx;
-          }
         }
 
         return self._activeIndex;
@@ -108,10 +97,17 @@
       ////////////////////////////////////////////////
 
       this.setActive = function (slide, isRetry) {
+
+        if (self.setActive._progress) {
+          $timeout.cancel(self.setActive._progress);
+          delete self.setActive._progress;
+        }
+
         var idx = self.getIndex(slide);
 
         if (idx === -1) {
 
+          console.log('-1', slide, isRetry);
           // Slide not found in collection.
           // Throw an error if we're already in a retry.
 
@@ -122,9 +118,10 @@
           // Maybe the slide directive has not been digested yet. 
           // Queue a retry on the $digest cycle.
 
-          $timeout(function () {
+          self.setActive._progress = $timeout(function () {
             self.setActive(slide, true);
-          });
+            delete self.setActive._progress;
+          }, 250);
 
         } else {
           self.activeIndex(idx);
