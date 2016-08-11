@@ -16,13 +16,13 @@
 
     <hr>
 
-    <div carousel="vm.carousel" interval="1500" active-index="vm.activeIndex">
+    <div carousel interval="0" active-index="vm.activeIndex" id="myCarousel">
       <carousel-slide ng-if="!vm.slides.length">
         <img holder="holder.js/900x500?auto=yes&random=yes&text=No slides added" style="margin:auto;">
       </carousel-slide>
       <div carousel-slide="slide" ng-repeat="slide in vm.slides">
         <img holder="holder.js/900x500?auto=yes&random=yes&text=Slide {{ slide.id }}" style="margin:auto;">
-        <div class="carousel-caption">
+        <div class="carousel-caption carousel-caption-parallax">
           <h1>{{ slide.caption }}</h1>
         </div>
       </div>
@@ -44,7 +44,6 @@
     </div>
 
   </div>
-
   <script src="../bower_components/holderjs/holder.min.js"></script>
   <script src="../bower_components/angular/angular.js"></script>
   <script src="../bower_components/angular-animate/angular-animate.js"></script>

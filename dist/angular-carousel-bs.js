@@ -4,7 +4,7 @@
 
   var mod = angular.module('angular-carousel-bs', ['ngAnimate']);
 
-  mod.factory('carouselService', ["$interval", function ($interval) {
+  mod.factory('carouselService', ["$interval", "$timeout", "$q", function ($interval, $timeout, $q) {
 
     var carousels = {};
 
@@ -29,7 +29,7 @@
       ////////////////////////////////////////////////
 
       this._slides = [];
-      this._activeIndex = 0;
+      this._activeIndex = this._activeIndexDelayed = 0;
       this._interval = {
         delay: 0
       };
@@ -45,7 +45,7 @@
       ////////////////////////////////////////////////
 
       this.removeSlide = function (slideOrIdx) {
-        var idx;
+        var idx, defer = $q.defer();
 
         if (angular.isNumber(slideOrIdx)) {
           idx = slideOrIdx >= 0 && slideOrIdx < self._slides.length ? slideOrIdx : -1;
@@ -54,11 +54,25 @@
         }
 
         if (idx !== -1) {
-          self._slides.splice(idx, 1);
-          if (self._activeIndex >= self._slides.length) {
-            self.activeIndex(self._slides.length - 1);
+
+          // if (self._activeIndex === idx) {
+          //   self.prev();
+          // }
+
+          if (self._activeIndex >= self._slides.length - 1) {
+            self.activeIndex(self._slides.length - 2);
           }
+
+          // $timeout(function () {
+            self._slides.splice(idx, 1);
+            defer.resolve();
+          // }, 600);
+
+        } else {
+          defer.resolve();
         }
+
+        return defer.promise;
       };
 
       ////////////////////////////////////////////////
@@ -69,7 +83,36 @@
 
       ////////////////////////////////////////////////
 
-      this.activeIndex = function (idx) {
+      this.isActiveDelayed = function (slide) {
+        return self._slides[self._activeIndexDelayed] === slide;
+      };
+
+      ////////////////////////////////////////////////
+
+      this._setActiveIndexDelayed = function (idx, direction) {
+
+        if (self._setActiveIndexDelayed._progress) {
+          $timeout.cancel(self._setActiveIndexDelayed._progress);
+        }
+
+        self._setActiveIndexDelayed._progress = $timeout(function () {
+
+          self._direction = direction < 0 ? 'left' : 'right';
+
+          if (idx < self._slides.length) {
+            direction = direction || idx - self._activeIndexDelayed;
+
+            self._activeIndexDelayed = idx;
+          }
+
+          delete self._setActiveIndexDelayed._progress;
+        }, 300);
+
+      };
+
+      ////////////////////////////////////////////////
+
+      this.activeIndex = function (idx, direction) {
 
         if (angular.isNumber(idx)) {
 
@@ -84,16 +127,8 @@
             idx = 0;
           }
 
-          if (idx !== self._activeIndex) {
-
-            if ((idx < self._activeIndex || (self._activeIndex === 0 && idx === self._slides.length - 1)) && !(self._activeIndex === self._slides.length - 1 && idx === 0)) {
-              self._direction = 'left';
-            } else {
-              self._direction = 'right';
-            }
-
-            self._activeIndex = idx;
-          }
+          self._activeIndex = idx;
+          self._setActiveIndexDelayed(idx, direction);
         }
 
         return self._activeIndex;
@@ -101,8 +136,36 @@
 
       ////////////////////////////////////////////////
 
-      this.setActive = function (slide) {
-        self.activeIndex(self.getIndex(slide));
+      this.setActive = function (slide, isRetry) {
+
+        if (self.setActive._progress) {
+          $timeout.cancel(self.setActive._progress);
+          delete self.setActive._progress;
+        }
+
+        var idx = self.getIndex(slide);
+
+        if (idx === -1) {
+
+          // Slide not found in collection.
+          // Throw an error if we're already in a retry.
+
+          if (isRetry) {
+            throw new Error('Cannot slide active; not part of the carousel.');
+          }
+
+          // Maybe the slide directive has not been digested yet. 
+          // Queue a retry on the $digest cycle.
+
+          self.setActive._progress = $timeout(function () {
+            self.setActive(slide, true);
+            delete self.setActive._progress;
+          }, 250);
+
+        } else {
+          self.activeIndex(idx);
+        }
+
       };
 
       ////////////////////////////////////////////////
@@ -115,14 +178,14 @@
 
       this.next = function () {
         var idx = self._activeIndex + 1;
-        self.activeIndex(idx);
+        self.activeIndex(idx, 1);
       };
 
       ////////////////////////////////////////////////
 
       this.prev = function () {
         var idx = self._activeIndex - 1;
-        self.activeIndex(idx);
+        self.activeIndex(idx, -1);
       };
 
       ////////////////////////////////////////////////
@@ -147,7 +210,7 @@
       ////////////////////////////////////////////////
 
       this.pause = function () {
-        
+
         self.paused = true;
 
         if (self._interval.promise) {
@@ -190,7 +253,7 @@
 
   ////////////////////////////////////////////////
 
-  mod.directive('carousel', ["carouselService", function (carouselService) {
+  mod.directive('carousel', ["carouselService", "$timeout", function (carouselService, $timeout) {
     return {
       scope: {
         activeIndex: '=?',
@@ -198,35 +261,38 @@
         interval: '=?'
       },
       restrict: 'AE',
-      templateUrl: './src/angular-carousel-bs/carousel.ng.html',
+      templateUrl: './angular-carousel-bs/carousel.ng.html',
       controller: function () { },
       transclude: true,
       link: {
         pre: function (scope, element, attributes) {
-          var id = attributes.id;
 
+          var id = attributes.id;
           var carousel = carouselService.get(id, scope);
           element.data('$carousel', carousel);
           scope.carousel = carousel;
 
-          scope.$watch('activeIndex', function (val, oldVal) {
-            if (val !== oldVal) {
-              carousel.activeIndex(val);
-            }
+        },
+        post: function (scope, element, attributes) {
+
+
+          scope.activeIndex = scope.activeIndex || 0;
+
+          scope.$watch('activeIndex', function (val) {
+            scope.carousel._activeIndex = val;
           });
 
-          scope.$watch(function () {
-            return carousel.activeIndex();
-          }, function (val) {
+          var once = true;
+
+          scope.$watch('carousel._activeIndex', function (val) {
             scope.activeIndex = val;
           });
 
           scope.$watch('interval', function (val, oldVal) {
-
             val = val && angular.isNumber(val) ? val : 0;
-            carousel.interval(parseInt(val));
-
+            scope.carousel.interval(parseInt(val));
           });
+
         }
       }
     };
@@ -241,21 +307,22 @@
       },
       replace: true,
       restrict: 'AE',
-      templateUrl: './src/angular-carousel-bs/slide.ng.html',
+      templateUrl: './angular-carousel-bs/slide.ng.html',
       transclude: true,
       require: '^carousel',
-      link: function (scope, element, attributes) {
+      link: {
+        pre: function (scope, element, attributes) {
 
-        var carousel = element.inheritedData('$carousel');
+          var carousel = element.inheritedData('$carousel');
 
-        scope.slide = carousel.addSlide(scope.slide || {});
+          scope.slide = carousel.addSlide(scope.slide || {});
 
-        scope.$on('$destroy', function () {
-          carousel.removeSlide(scope.slide);
-        });
+          scope.$on('$destroy', function () {
+            carousel.removeSlide(scope.slide);
+          });
 
-        scope.carousel = carousel;
-
+          scope.carousel = carousel;
+        }
       }
     };
   });
@@ -263,5 +330,5 @@
   ////////////////////////////////////////////////
 
 })(angular);
-angular.module('angular-carousel-bs').run(['$templateCache', function($templateCache) {$templateCache.put('./src/angular-carousel-bs/carousel.ng.html','<div class="carousel carousel-bs slide {{carousel._direction}}" ng-mouseenter="carousel.pause()" ng-mouseleave="carousel.resume()"><div class="carousel-inner" role="listbox" ng-transclude=""></div><div ng-if="carousel._slides.length > 1"><ol class="carousel-indicators"><li ng-repeat="slide in carousel._slides" ng-class="{ \'active\': carousel.isActive(slide) }" ng-click="carousel.setActive(slide)"></li></ol><a class="left carousel-control" role="button" ng-click="carousel.prev()"><span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span> <span class="sr-only">Previous</span> </a><a class="right carousel-control" role="button" ng-click="carousel.next()"><span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span> <span class="sr-only">Next</span></a></div></div>');
-$templateCache.put('./src/angular-carousel-bs/slide.ng.html','<div class="item" ng-transclude="" ng-class="{ active: carousel.isActive(slide) }"></div>');}]);
+angular.module('angular-carousel-bs').run(['$templateCache', function($templateCache) {$templateCache.put('./angular-carousel/carousel.ng.html','<div class="carousel carousel-bs slide {{carousel._direction}}" ng-mouseenter="carousel.pause()" ng-mouseleave="carousel.resume()"><div class="carousel-inner" role="listbox" ng-transclude=""></div><div ng-if="carousel._slides.length > 1"><ol class="carousel-indicators"><li ng-repeat="slide in carousel._slides" ng-class="{ \'active\': carousel.isActive(slide) }" ng-click="carousel.setActive(slide)"></li></ol><a class="left carousel-control" role="button" ng-click="carousel.prev()"><span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span> <span class="sr-only">Previous</span> </a><a class="right carousel-control" role="button" ng-click="carousel.next()"><span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span> <span class="sr-only">Next</span></a></div></div>');
+$templateCache.put('./angular-carousel/slide.ng.html','<div class="item" ng-transclude="" ng-class="{ active: carousel.isActiveDelayed(slide) }"></div>');}]);
