@@ -4,7 +4,7 @@
 
   var mod = angular.module('angular-carousel-bs', ['ngAnimate']);
 
-  mod.factory('carouselService', function ($interval) {
+  mod.factory('carouselService', function ($interval, $timeout) {
 
     var carousels = {};
 
@@ -101,8 +101,29 @@
 
       ////////////////////////////////////////////////
 
-      this.setActive = function (slide) {
-        self.activeIndex(self.getIndex(slide));
+      this.setActive = function (slide, isRetry) {
+        var idx = self.getIndex(slide);
+
+        if(idx === -1) {
+
+          // Slide not found in collection.
+          // Throw an error if we're already in a retry.
+
+          if(isRetry) {
+            throw new Error('Cannot slide active; not part of the carousel.');
+          }
+
+          // Maybe the slide directive has not been digested yet. 
+          // Queue a retry on the $digest cycle.
+          
+          $timeout(function() {
+            self.setActive(slide, true);
+          });
+          
+        } else {
+          self.activeIndex(idx);
+        }
+        
       };
 
       ////////////////////////////////////////////////

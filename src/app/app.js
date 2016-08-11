@@ -30,14 +30,14 @@
       self.slides.splice(self.activeIndex, 1);
     };
   
-    var x = 10;
+    var x = 2;
 
     while(x--) {
       self.addSlide(false);
     }
 
-    this.activeIndex = 2;
-
+     this.activeIndex = 0;
+    //self.carousel.setActive(self.slides[2]);
   });
 
 })(angular);
