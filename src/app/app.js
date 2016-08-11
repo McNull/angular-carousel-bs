@@ -32,17 +32,19 @@
     };
 
     this.removeSlide = function () {
-      var idx = self.carousel.activeIndex();
+      var idx = self.carousel.activeIndex;
       self.slides.splice(idx, 1);
     };
 
-    var x = 10;
+    var x = 1;
 
     while (x--) {
       self.addSlide(false);
     }
 
-    self.carousel.setActive(self.slides[1]);
+    //self.carousel.setActive(self.slides[1]);
+
+    self.activeIndex = 0;
   });
 
 })(angular);

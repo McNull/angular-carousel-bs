@@ -34,7 +34,7 @@
       ////////////////////////////////////////////////
 
       this._slides = [];
-      this._activeIndex = this._activeIndexDelayed = 0;
+      this.activeIndex = this._activeIndexDelayed = 0;
       this._interval = {
         delay: 0
       };
@@ -50,7 +50,7 @@
       ////////////////////////////////////////////////
 
       this.removeSlide = function (slideOrIdx) {
-        var idx, defer = $q.defer();
+        var idx;
 
         if (angular.isNumber(slideOrIdx)) {
           idx = slideOrIdx >= 0 && slideOrIdx < self._slides.length ? slideOrIdx : -1;
@@ -59,31 +59,16 @@
         }
 
         if (idx !== -1) {
-
-          // if (self._activeIndex === idx) {
-          //   self.prev();
-          // }
-
-          if (self._activeIndex >= self._slides.length - 1) {
-            self.activeIndex(self._slides.length - 2);
-          }
-
-          // $timeout(function () {
           self._slides.splice(idx, 1);
-          defer.resolve();
-          // }, 600);
-
-        } else {
-          defer.resolve();
+          self.activeIndex = self.wrapIndex(self.activeIndex);
         }
-
-        return defer.promise;
+        
       };
 
       ////////////////////////////////////////////////
 
       this.isActive = function (slide) {
-        return self._slides[self._activeIndex] === slide;
+        return self._slides[self.activeIndex] === slide;
       };
 
       ////////////////////////////////////////////////
@@ -131,15 +116,13 @@
 
       ////////////////////////////////////////////////
 
-      this.activeIndex = function (idx, direction) {
-
-        if (angular.isNumber(idx)) {
-          self._activeIndex = idx;
-          self._setActiveIndexDelayed(idx, direction);
-        }
-
-        return self._activeIndex;
-      };
+      this._listeners.push($rootScope.$watch(function() {
+        return self.activeIndex;
+      }, function(val, oldVal) {
+        console.log('activeIndex changed', val, oldVal);
+        self._setActiveIndexDelayed(val, self._forceDirection);
+        delete self._forceDirection;
+      }));
 
       ////////////////////////////////////////////////
 
@@ -170,7 +153,7 @@
           }, 250);
 
         } else {
-          self.activeIndex(idx);
+          self.activeIndex = idx;
         }
 
       };
@@ -184,17 +167,19 @@
       ////////////////////////////////////////////////
 
       this.next = function () {
-        var idx = self._activeIndex + 1;
+        var idx = self.activeIndex + 1;
         idx = self.wrapIndex(idx);
-        self.activeIndex(idx, 1);
+        self.activeIndex = idx;
+        self._forceDirection = 1;
       };
 
       ////////////////////////////////////////////////
 
       this.prev = function () {
-        var idx = self._activeIndex - 1;
+        var idx = self.activeIndex - 1;
         idx = self.wrapIndex(idx);
-        self.activeIndex(idx, -1);
+        self.activeIndex = idx;
+        self._forceDirection = -1;
       };
 
       ////////////////////////////////////////////////
@@ -290,9 +275,15 @@
           scope.activeIndex = scope.activeIndex || 0;
           scope.carousel._activeIndexDelayed = scope.activeIndex;
 
-          var once = true;
+          scope.$watch('activeIndex', function(val) {
+            scope.carousel.activeIndex = val;
+          });
 
-          scope.$watch('interval', function (val, oldVal) {
+          scope.$watch('carousel.activeIndex', function(val) {
+            scope.activeIndex = val;
+          });
+
+          scope.$watch('interval', function (val) {
             val = val && angular.isNumber(val) ? val : 0;
             scope.carousel.interval(parseInt(val));
           });
