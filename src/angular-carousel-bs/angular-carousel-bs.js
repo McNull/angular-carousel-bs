@@ -29,7 +29,7 @@
       ////////////////////////////////////////////////
 
       this._slides = [];
-      this._activeIndex = 0;
+      this._activeIndex = this._activeIndexDelayed = 0;
       this._interval = {
         delay: 0
       };
@@ -69,6 +69,29 @@
 
       ////////////////////////////////////////////////
 
+      this.isActiveDelayed = function (slide) {
+        return self._slides[self._activeIndexDelayed] === slide;
+      };
+
+      ////////////////////////////////////////////////
+
+      this._setActiveIndexDelayed = function (idx, direction) {
+
+        if (self._setActiveIndexDelayed._progress) {
+          $timeout.cancel(self._setActiveIndexDelayed._progress);
+        }
+
+        self._setActiveIndexDelayed._progress = $timeout(function () {
+          direction = direction || idx - self._activeIndexDelayed;
+          self._direction = direction < 0 ? 'left' : 'right';
+          self._activeIndexDelayed = idx;
+          delete self._setActiveIndexDelayed._progress;
+        }, 300);
+
+      };
+
+      ////////////////////////////////////////////////
+
       this.activeIndex = function (idx, direction) {
 
         if (angular.isNumber(idx)) {
@@ -84,11 +107,8 @@
             idx = 0;
           }
 
-          direction = direction || idx - self._activeIndex;
-
-          self._direction = direction < 0 ? 'left' : 'right';
           self._activeIndex = idx;
-
+          self._setActiveIndexDelayed(idx, direction);
         }
 
         return self._activeIndex;
@@ -107,7 +127,6 @@
 
         if (idx === -1) {
 
-          console.log('-1', slide, isRetry);
           // Slide not found in collection.
           // Throw an error if we're already in a retry.
 
