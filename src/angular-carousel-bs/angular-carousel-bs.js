@@ -4,7 +4,7 @@
 
   var mod = angular.module('angular-carousel-bs', ['ngAnimate']);
 
-  mod.factory('carouselService', function ($interval, $timeout) {
+  mod.factory('carouselService', function ($interval, $timeout, $q) {
 
     var carousels = {};
 
@@ -45,7 +45,7 @@
       ////////////////////////////////////////////////
 
       this.removeSlide = function (slideOrIdx) {
-        var idx;
+        var idx, defer = $q.defer();
 
         if (angular.isNumber(slideOrIdx)) {
           idx = slideOrIdx >= 0 && slideOrIdx < self._slides.length ? slideOrIdx : -1;
@@ -54,11 +54,25 @@
         }
 
         if (idx !== -1) {
-          self._slides.splice(idx, 1);
-          if (self._activeIndex >= self._slides.length) {
-            self.activeIndex(self._slides.length - 1);
+
+          // if (self._activeIndex === idx) {
+          //   self.prev();
+          // }
+
+          if (self._activeIndex >= self._slides.length - 1) {
+            self.activeIndex(self._slides.length - 2);
           }
+
+          // $timeout(function () {
+            self._slides.splice(idx, 1);
+            defer.resolve();
+          // }, 600);
+
+        } else {
+          defer.resolve();
         }
+
+        return defer.promise;
       };
 
       ////////////////////////////////////////////////
@@ -82,9 +96,15 @@
         }
 
         self._setActiveIndexDelayed._progress = $timeout(function () {
-          direction = direction || idx - self._activeIndexDelayed;
+
           self._direction = direction < 0 ? 'left' : 'right';
-          self._activeIndexDelayed = idx;
+
+          if (idx < self._slides.length) {
+            direction = direction || idx - self._activeIndexDelayed;
+
+            self._activeIndexDelayed = idx;
+          }
+
           delete self._setActiveIndexDelayed._progress;
         }, 300);
 

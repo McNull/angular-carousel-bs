@@ -2,9 +2,14 @@
 
   var app = angular.module('app', ['ngHolder', 'lorem', 'angular-carousel-bs']);
 
-  app.controller('MyController', function (lorem, $interval) {
+  app.controller('MyController', function (lorem, $interval, carouselService) {
 
     var self = this;
+
+    // The carousel instance can also be accessed via the carousel attribute on the element.
+    // The id attribute determines the name of the instance.
+
+    this.carousel = carouselService.get('myCarousel');
 
     this.slides = [];
 
@@ -27,7 +32,12 @@
     };
 
     this.removeSlide = function() {
-      self.slides.splice(self.activeIndex, 1);
+      var idx = self.activeIndex;
+
+      // self.carousel.removeSlide(idx).then(function() {
+        self.slides.splice(idx, 1);
+      // });
+
     };
   
     var x = 2;
