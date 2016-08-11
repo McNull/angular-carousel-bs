@@ -14,14 +14,14 @@
       ///////////////////////////////////////////////
 
       self._id = id;
-      self._refCount = 1;
+      self._refCount = 0;
 
       self.addRef = function () {
         self._refCount += 1;
       };
 
       self.release = function () {
-        if (!--self._refCount) {
+        if (--self._refCount <= 0) {
           delete carousels[self._id];
         }
       };
@@ -236,6 +236,9 @@
         }
 
         if (scope) {
+
+          carousels[id].addRef();
+          
           scope.$on('$destroy', function () {
             carousels[id].release();
           });
